@@ -21,4 +21,4 @@ bot.on("message", async (ctx, next) => {
 // This will connect to the Telegram servers and wait for messages.
 
 // Start your bot
-bot.start().then();
+bot.start();
