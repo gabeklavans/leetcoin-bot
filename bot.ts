@@ -1,4 +1,5 @@
-import { Bot, Context } from "grammy";
+import { Bot } from "grammy";
+import axios from "axios";
 import Config from "./config";
 
 // Create an instance of the `Bot` class and pass your bot token to it.
@@ -9,16 +10,17 @@ const bot = new Bot(Config.TelegramBotApiKey); // <-- put your bot token between
 
 // React to /start command
 bot.command("start", (ctx) => ctx.reply("Welcome! Up and running."));
-// Handle other messages
-// bot.on("message", (ctx) => ctx.reply("Got another message!"));
+
+bot.command("send", async (ctx) => {
+  const { data }: any = await axios.get("https://jsonplaceholder.typicode.com/users/1");
+
+  ctx.reply(`Sent LC to ${data.name}`);
+})
 
 bot.on("message", async (ctx, next) => {
   const user = await ctx.getAuthor();
   ctx.reply(user.user.id.toString());
 });
-
-// Now that you specified how to handle messages, you can start your bot.
-// This will connect to the Telegram servers and wait for messages.
 
 // Start your bot
 bot.start();
