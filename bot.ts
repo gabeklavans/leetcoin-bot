@@ -1,22 +1,20 @@
-import { Bot, Context } from "grammy";
+import { Bot, Context, InlineKeyboard, Keyboard } from "grammy";
 import axios from "axios";
 import Config from "./config";
 import { StatelessQuestion } from "@grammyjs/stateless-question/dist/source";
+import { InlineQueryResult } from "@grammyjs/types";
 
-// Create an instance of the `Bot` class and pass your bot token to it.
-const bot = new Bot(Config.TelegramBotApiKey); // <-- put your bot token between the ""
+const bot = new Bot(Config.TelegramBotApiKey);
 
-// You can now register listeners on your bot object `bot`.
-// grammY will call the listeners when users send messages to your bot.
+const authenticate = async (user: string, pass: string, telegramId: number) => {
+  const res = await axios.put(`${Config.LeetcoinBaseUrl}/api/user/tgId`, {
+    username: user,
+    password: pass,
+    telegramId: telegramId.toString(),
+    apiKey: Config.LeetcoinApiKey,
+  });
 
-// React to /start command
-bot.command("start", async (ctx) => {
-  ctx.reply("Welcome!");
-  await askCredentials(ctx);
-});
-
-const authenticate = async (user: string, pass: string) => {
-  // hit api
+  return res;
 };
 
 let user: string, pass: string;
@@ -27,8 +25,19 @@ const askUsername = new StatelessQuestion("username", async (ctx) => {
 
 const askPassword = new StatelessQuestion("password", async (ctx) => {
   pass = ctx.message.text as string;
-  await authenticate(user, pass);
+
+  try {
+    await authenticate(user, pass, (await ctx.getAuthor()).user.id);
+    ctx.reply(
+      "Successfully authenticated. Now you can try to send and receive LC."
+    );
+  } catch (error) {
+    console.error(error);
+    ctx.reply("Unable to authenticate.");
+  }
 });
+
+const keyboard = new Keyboard().text("Cool").row().text("Not Cool");
 
 bot.use(askUsername.middleware());
 bot.use(askPassword.middleware());
@@ -37,6 +46,13 @@ const askCredentials = async (ctx: Context) => {
   await askUsername.replyWithMarkdown(ctx, "What is your username?");
 };
 
+// ---------COMMANDLERS (Command Handlers)-----------
+// React to /start command
+bot.command("start", async (ctx) => {
+  ctx.reply("Welcome!");
+  await askCredentials(ctx);
+});
+
 bot.command("auth", askCredentials);
 
 bot.command("send", async (ctx) => {
@@ -44,13 +60,43 @@ bot.command("send", async (ctx) => {
     "https://jsonplaceholder.typicode.com/users/1"
   );
 
-  ctx.reply(`Sent LC to ${data.name}`);
+  ctx.reply("Choose a recipient", { reply_markup: keyboard });
 });
 
 bot.on("message", async (ctx, next) => {
   const user = await ctx.getAuthor();
-  ctx.reply(user.user.id.toString());
+  await ctx.reply(user.user.id.toString());
 });
 
-// Start your bot
+bot.on("inline_query", async (ctx) => {
+  const amt = ctx.inlineQuery.query;
+  console.log(amt);
+
+  const { data: lcUsers } = await axios.get(
+    `${Config.LeetcoinBaseUrl}/api/users`
+  );
+  const inlineResUsers: InlineQueryResult[] = (
+    lcUsers as { _id: string; name: string }[]
+  ).map((lcUser) => {
+    const opt: InlineQueryResult = {
+      type: "article",
+      id: lcUser._id,
+      title: lcUser.name,
+      input_message_content: {
+        message_text: `Confirm sending of <b>${amt}</b> LC to <b>${lcUser.name}</b>`,
+        parse_mode: "HTML",
+      },
+      reply_markup: new InlineKeyboard().url(
+        "Confirm",
+        `https://t.me/LeetcoinBot?start=hello`
+      ),
+      url: `https://t.me/LeetcoinBot?start=hello`,
+    };
+
+    return opt;
+  });
+
+  await ctx.answerInlineQuery(inlineResUsers);
+});
+
 bot.start();
