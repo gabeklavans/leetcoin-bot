@@ -1,4 +1,4 @@
-import { Bot, Context, InlineKeyboard, Keyboard } from "grammy";
+import { Bot, Context, InlineKeyboard } from "grammy";
 import axios from "axios";
 import Config from "./config";
 import { StatelessQuestion } from "@grammyjs/stateless-question/dist/source";
@@ -37,8 +37,6 @@ const askPassword = new StatelessQuestion("password", async (ctx) => {
   }
 });
 
-const keyboard = new Keyboard().text("Cool").row().text("Not Cool");
-
 bot.use(askUsername.middleware());
 bot.use(askPassword.middleware());
 
@@ -54,14 +52,6 @@ bot.command("start", async (ctx) => {
 });
 
 bot.command("auth", askCredentials);
-
-bot.command("send", async (ctx) => {
-  const { data }: any = await axios.get(
-    "https://jsonplaceholder.typicode.com/users/1"
-  );
-
-  ctx.reply("Choose a recipient", { reply_markup: keyboard });
-});
 
 bot.on("message", async (ctx, next) => {
   const user = await ctx.getAuthor();
@@ -90,7 +80,7 @@ bot.on("inline_query", async (ctx) => {
         "Confirm",
         `${Config.LeetcoinClientBaseUrl}/tg-transfer?tgId=${tgId}&receiver=${lcUser.name}&amt=${amt}`
       ),
-      // url: `Send ${amt} LC to ${lcUser.name}`,
+      url: `https://send.lc?to=${lcUser.name}&amt=${amt}`,
     };
 
     return opt;
