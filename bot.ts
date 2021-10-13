@@ -70,7 +70,7 @@ bot.on("message", async (ctx, next) => {
 
 bot.on("inline_query", async (ctx) => {
   const amt = ctx.inlineQuery.query;
-  console.log(amt);
+  const tgId = ctx.inlineQuery.from.id.toString();
 
   const { data: lcUsers } = await axios.get(
     `${Config.LeetcoinBaseUrl}/api/users`
@@ -88,9 +88,9 @@ bot.on("inline_query", async (ctx) => {
       },
       reply_markup: new InlineKeyboard().url(
         "Confirm",
-        `https://t.me/LeetcoinBot?start=hello`
+        `${Config.LeetcoinClientBaseUrl}/tg-transfer?tgId=${tgId}&receiver=${lcUser.name}&amt=${amt}`
       ),
-      url: `https://t.me/LeetcoinBot?start=hello`,
+      // url: `Send ${amt} LC to ${lcUser.name}`,
     };
 
     return opt;
