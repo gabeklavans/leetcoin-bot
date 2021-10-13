@@ -53,11 +53,6 @@ bot.command("start", async (ctx) => {
 
 bot.command("auth", askCredentials);
 
-bot.on("message", async (ctx, next) => {
-  const user = await ctx.getAuthor();
-  await ctx.reply(user.user.id.toString());
-});
-
 bot.on("inline_query", async (ctx) => {
   const amt = ctx.inlineQuery.query;
   const tgId = ctx.inlineQuery.from.id.toString();
@@ -80,7 +75,7 @@ bot.on("inline_query", async (ctx) => {
         "Confirm",
         `${Config.LeetcoinClientBaseUrl}/tg-transfer?tgId=${tgId}&receiver=${lcUser.name}&amt=${amt}`
       ),
-      url: `https://send.lc?to=${lcUser.name}&amt=${amt}`,
+      //url: `https://send.lc?to=${lcUser.name}&amt=${amt}`,
     };
 
     return opt;

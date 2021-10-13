@@ -1,12 +1,15 @@
 {
   "name": "leetcoin-bot",
   "version": "1.0.0",
-  "description": "",
+  "description": "A Telegram bot for sending Leetcoin",
+  "repository": "https://github.com/gabeklavans/leetcoin-bot",
   "main": "bot.js",
   "scripts": {
-    "dev": "nodemon bot.ts"
+    "dev": "nodemon bot.ts",
+    "build": "tsc bot.ts",
+    "start": "node bot.js"
   },
-  "author": "",
+  "author": "Gabriel Klavans",
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^16.10.2",
